@@ -218,15 +218,14 @@ var kirkiPostMessage = {
 					if ( _.isObject( value ) ) {
 						styles += output.element + '{';
 						_.each( value, function( val, key ) {
+							var property;
 							if ( output.choice && key !== output.choice ) {
 								return;
 							}
 							processedValue = kirkiPostMessage.util.processValue( output, val );
-							if ( ! output.property ) {
-								output.property = key;
-							}
+							property       = output.property ? output.property : key;
 							if ( false !== processedValue ) {
-								styles += output.property + ':' + processedValue + ';';
+								styles += property + ':' + processedValue + ';';
 							}
 						} );
 						styles += '}';
