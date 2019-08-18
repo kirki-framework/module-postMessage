@@ -12,7 +12,6 @@
 
 namespace Kirki\Module;
 
-use Kirki\Compatibility\Kirki;
 use Kirki\URL;
 
 /**
