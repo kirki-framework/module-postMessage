@@ -11,7 +11,6 @@
 /package.json         export-ignore
 /webpack.config.js    export-ignore
 /.babelrc             export-ignore
-/src/*.js             export-ignore
 /composer.json        export-ignore
 /package-lock.json    export-ignore
 /README.md            export-ignore
