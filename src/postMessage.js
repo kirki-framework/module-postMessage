@@ -1,29 +1,32 @@
 /* global kirkiPostMessageFields */
+/* eslint max-depth: off */
 var kirkiPostMessage = {
 
 	/**
 	 * The fields.
 	 *
-	 * @since 3.0.26
+	 * @since 1.0.0
 	 */
 	fields: {},
 
 	/**
 	 * A collection of methods for the <style> tags.
 	 *
-	 * @since 3.0.26
+	 * @since 1.0.0
 	 */
 	styleTag: {
 
 		/**
 		 * Add a <style> tag in <head> if it doesn't already exist.
 		 *
-		 * @since 3.0.26
+		 * @since 1.0.0
+		 *
 		 * @param {string} id - The field-ID.
+		 *
 		 * @returns {void}
 		 */
 		add: function( id ) {
-			id = id.replace(/[^\w\s]/gi, '-');
+			id = id.replace( /[^\w\s]/gi, '-' );
 			if ( null === document.getElementById( 'kirki-postmessage-' + id ) || 'undefined' === typeof document.getElementById( 'kirki-postmessage-' + id ) ) {
 				jQuery( 'head' ).append( '<style id="kirki-postmessage-' + id + '"></style>' );
 			}
@@ -33,9 +36,11 @@ var kirkiPostMessage = {
 		 * Add a <style> tag in <head> if it doesn't already exist,
 		 * by calling the this.add method, and then add styles inside it.
 		 *
-		 * @since 3.0.26
+		 * @since 1.0.0
+		 *
 		 * @param {string} id - The field-ID.
 		 * @param {string} styles - The styles to add.
+		 *
 		 * @returns {void}
 		 */
 		addData: function( id, styles ) {
@@ -48,17 +53,19 @@ var kirkiPostMessage = {
 	/**
 	 * Common utilities.
 	 *
-	 * @since 3.0.26
+	 * @since 1.0.0
 	 */
 	util: {
 
 		/**
 		 * Processes the value and applies any replacements and/or additions.
 		 *
-		 * @since 3.0.26
+		 * @since 1.0.0
+		 *
 		 * @param {Object} output - The output (js_vars) argument.
 		 * @param {mixed}  value - The value.
 		 * @param {string} controlType - The control-type.
+		 *
 		 * @returns {string|false} - Returns false if value is excluded, otherwise a string.
 		 */
 		processValue: function( output, value ) {
@@ -105,8 +112,10 @@ var kirkiPostMessage = {
 		/**
 		 * Make sure urls are properly formatted for background-image properties.
 		 *
-		 * @since 3.0.26
+		 * @since 1.0.0
+		 *
 		 * @param {string} url - The URL.
+		 *
 		 * @returns {string} - Returns the URL.
 		 */
 		backgroundImageValue: function( url ) {
@@ -117,17 +126,19 @@ var kirkiPostMessage = {
 	/**
 	 * A collection of utilities for CSS generation.
 	 *
-	 * @since 3.0.26
+	 * @since 1.0.0
 	 */
 	css: {
 
 		/**
 		 * Generates the CSS from the output (js_vars) parameter.
 		 *
-		 * @since 3.0.26
+		 * @since 1.0.0
+		 *
 		 * @param {Object} output - The output (js_vars) argument.
 		 * @param {mixed}  value - The value.
 		 * @param {string} controlType - The control-type.
+		 *
 		 * @returns {string} - Returns CSS as a string.
 		 */
 		fromOutput: function( output, value, controlType ) {
@@ -237,16 +248,18 @@ var kirkiPostMessage = {
 	/**
 	 * A collection of utilities to change the HTML in the document.
 	 *
-	 * @since 3.0.26
+	 * @since 1.0.0
 	 */
 	html: {
 
 		/**
 		 * Modifies the HTML from the output (js_vars) parameter.
 		 *
-		 * @since 3.0.26
+		 * @since 1.0.0
+		 *
 		 * @param {Object} output - The output (js_vars) argument.
 		 * @param {mixed}  value - The value.
+		 *
 		 * @returns {void}
 		 */
 		fromOutput: function( output, value ) {
@@ -279,16 +292,18 @@ var kirkiPostMessage = {
 	/**
 	 * A collection of utilities to allow toggling a CSS class.
 	 *
-	 * @since 3.0.26
+	 * @since 1.0.0
 	 */
 	toggleClass: {
 
 		/**
 		 * Toggles a CSS class from the output (js_vars) parameter.
 		 *
-		 * @since 3.0.21
+		 * @since 1.0.0
+		 *
 		 * @param {Object} output - The output (js_vars) argument.
 		 * @param {mixed}  value - The value.
+		 *
 		 * @returns {void}
 		 */
 		fromOutput: function( output, value ) {
@@ -305,18 +320,30 @@ var kirkiPostMessage = {
 };
 
 jQuery( document ).ready( function() {
-
+	var styles;
 	_.each( kirkiPostMessageFields, function( field ) {
+
+		// Take care of styles on initial load and page-refreshes.
+		styles = '';
+		_.each( field.js_vars, function( output ) {
+			output.function = ( ! output.function || 'undefined' === typeof kirkiPostMessage[ output.function ] ) ? 'css' : output.function;
+			field.type = ( field.choices && field.choices.parent_type ) ? field.choices.parent_type : field.type;
+
+			if ( 'css' === output.function ) {
+				styles += kirkiPostMessage.css.fromOutput( output, wp.customize( field.settings ).get(), field.type );
+			} else {
+				kirkiPostMessage[ output.function ].fromOutput( output, wp.customize( field.settings ).get(), field.type );
+			}
+		} );
+		kirkiPostMessage.styleTag.addData( field.settings, styles );
+
 		wp.customize( field.settings, function( value ) {
 			value.bind( function( newVal ) {
-				var styles = '';
+				styles = '';
 				_.each( field.js_vars, function( output ) {
-					if ( ! output.function || 'undefined' === typeof kirkiPostMessage[ output.function ] ) {
-						output.function = 'css';
-					}
-					if ( field.choices && field.choices.parent_type ) {
-						field.type = field.choices.parent_type;
-					}
+					output.function = ( ! output.function || 'undefined' === typeof kirkiPostMessage[ output.function ] ) ? 'css' : output.function;
+					field.type = ( field.choices && field.choices.parent_type ) ? field.choices.parent_type : field.type;
+
 					if ( 'css' === output.function ) {
 						styles += kirkiPostMessage.css.fromOutput( output, newVal, field.type );
 					} else {
